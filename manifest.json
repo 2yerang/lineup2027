@@ -1,0 +1,15 @@
+{
+  "name": "2027 뮤지컬 공연 라인업",
+  "short_name": "공연 라인업",
+  "description": "2027년 뮤지컬 공연 일정 Gantt 차트",
+  "start_url": "/lineup2027/",
+  "scope": "/lineup2027/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#13132a",
+  "background_color": "#0d0d1a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
