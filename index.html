@@ -499,7 +499,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v2';const APP_DATE='2026.06.22';
+const APP_VER='v2.1';const APP_DATE='2026.06.22';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -1076,7 +1076,7 @@ function makePlanItem(s){
   item.addEventListener('touchmove',e=>{
     if(!_tPending)return;
     const t=e.touches[0],dx=t.clientX-_tStartX,dy=t.clientY-_tStartY;
-    if(!_tGhost&&(Math.abs(dx)>8||Math.abs(dy)>8)){
+    if(!_tGhost&&(Math.abs(dx)>4||Math.abs(dy)>4)){
       _tKey=_tPending;_tPending=null;
       const r=item.getBoundingClientRect(),g=document.createElement('div');
       g.style.cssText='position:fixed;z-index:200;pointer-events:none;opacity:.85;background:var(--bg3);border:1px solid var(--accent);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;left:'+r.left+'px;top:'+r.top+'px;';
