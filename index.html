@@ -499,7 +499,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v1';const APP_DATE='2026.06.21';
+const APP_VER='v2';const APP_DATE='2026.06.22';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -1012,7 +1012,7 @@ document.getElementById('zip-btn').addEventListener('click',async()=>{
 
 // ===== PLAN TAB =====
 const PK='lineup2027_plan';
-let planWishOnly=false,_dragKey=null,_tKey=null,_tGhost=null;
+let planWishOnly=false,_dragKey=null,_tKey=null,_tGhost=null,_tStartX=0,_tStartY=0,_tPending=null;
 function getPlan(){try{return JSON.parse(localStorage.getItem(PK)||'{}')}catch{return{}}}
 function savePlan(p){localStorage.setItem(PK,JSON.stringify(p));}
 function getPlanMonth(s){const v=getPlan()[sk(s)];return v!=null?Number(v):null;}
@@ -1070,18 +1070,23 @@ function makePlanItem(s){
   item.addEventListener('dragstart',e=>{_dragKey=key;e.dataTransfer.setData('text/plain',key);e.dataTransfer.effectAllowed='move';setTimeout(()=>item.classList.add('dragging'),0);});
   item.addEventListener('dragend',()=>{item.classList.remove('dragging');_dragKey=null;});
   item.addEventListener('touchstart',e=>{
-    if(e.touches.length>1)return;_tKey=key;
-    const t=e.touches[0],r=item.getBoundingClientRect();
-    const g=document.createElement('div');
-    g.style.cssText='position:fixed;z-index:200;pointer-events:none;opacity:.85;background:var(--bg3);border:1px solid var(--accent);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;left:'+r.left+'px;top:'+r.top+'px;';
-    g.textContent=nd(s.name);document.body.appendChild(g);_tGhost=g;
-    item.classList.add('dragging');e.preventDefault();
-  },{passive:false});
+    if(e.touches.length>1)return;
+    const t=e.touches[0];_tPending=key;_tStartX=t.clientX;_tStartY=t.clientY;
+  },{passive:true});
   item.addEventListener('touchmove',e=>{
-    if(!_tGhost)return;const t=e.touches[0];
-    _tGhost.style.left=(t.clientX-50)+'px';_tGhost.style.top=(t.clientY-14)+'px';e.preventDefault();
+    if(!_tPending)return;
+    const t=e.touches[0],dx=t.clientX-_tStartX,dy=t.clientY-_tStartY;
+    if(!_tGhost&&(Math.abs(dx)>8||Math.abs(dy)>8)){
+      _tKey=_tPending;_tPending=null;
+      const r=item.getBoundingClientRect(),g=document.createElement('div');
+      g.style.cssText='position:fixed;z-index:200;pointer-events:none;opacity:.85;background:var(--bg3);border:1px solid var(--accent);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--text1);white-space:nowrap;left:'+r.left+'px;top:'+r.top+'px;';
+      g.textContent=nd(s.name);document.body.appendChild(g);_tGhost=g;
+      item.classList.add('dragging');
+    }
+    if(_tGhost){_tGhost.style.left=(t.clientX-50)+'px';_tGhost.style.top=(t.clientY-14)+'px';e.preventDefault();}
   },{passive:false});
   item.addEventListener('touchend',e=>{
+    _tPending=null;
     if(!_tGhost){_tKey=null;return;}
     document.body.removeChild(_tGhost);_tGhost=null;item.classList.remove('dragging');
     const t=e.changedTouches[0],el=document.elementFromPoint(t.clientX,t.clientY);
