@@ -325,6 +325,9 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <button id="csv-btn" class="act-btn">CSV 다운로드</button>
       <button id="zip-btn" class="act-btn">ZIP 다운로드</button>
     </div>
+    <div id="pc" class="ctrl-grp hidden">
+      <button class="vw-btn" id="pwish-f" title="위시만 보기">♥위시</button>
+    </div>
     <button id="ending-btn">⏰ <span id="ecnt"></span></button>
     <span id="count-badge"></span>
   </div>
@@ -499,7 +502,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v2.1.1';const APP_DATE='2026.06.29';
+const APP_VER='v2.1.2';const APP_DATE='2026.07.11';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -1019,10 +1022,11 @@ function getPlanMonth(s){const v=getPlan()[sk(s)];return v!=null?Number(v):null;
 function setPlanMonth(s,mi){const p=getPlan(),k=sk(s);if(mi===null)delete p[k];else p[k]=mi;savePlan(p);}
 function uPri(s){const w=isWish(s),f=isFav(s.facility,s.hall);return(w&&f)?0:w?1:f?2:3;}
 function renderPlan(){
-  cbadge.textContent='';
   const plan=getPlan(),byM={};
   for(let i=0;i<=12;i++)byM[i]=[];byM['u']=[];
   SHOWS.forEach(s=>{const mi=plan[sk(s)];if(mi!=null&&Number(mi)>=0&&Number(mi)<=12)byM[Number(mi)].push(s);else byM['u'].push(s);});
+  cbadge.textContent=(SHOWS.length-byM['u'].length)+'개 계획 / '+byM['u'].length+'개 미지정';
+  document.getElementById('pwish-f').classList.toggle('on',planWishOnly);
   for(let i=0;i<=12;i++)byM[i].sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end)||a.name.localeCompare(b.name,'ko'));
   byM['u'].sort((a,b)=>uPri(a)-uPri(b)||a.end.localeCompare(b.end)||a.name.localeCompare(b.name,'ko'));
   const grid=document.getElementById('plan-grid');grid.innerHTML='';
@@ -1035,12 +1039,6 @@ function makePlanCell(mi,shows,isU){
   const hdr=document.createElement('div');hdr.className='plan-cell-hdr';
   const hn=document.createElement('span');hn.className='ph-name';hn.textContent=isU?'미지정':MONTH_NAMES[mi];
   hdr.appendChild(hn);
-  if(isU){
-    const tog=document.createElement('button');tog.className='pu-toggle'+(planWishOnly?' on':'');
-    tog.textContent=planWishOnly?'♥위시':'전체';
-    tog.addEventListener('click',e=>{e.stopPropagation();planWishOnly=!planWishOnly;renderPlan();});
-    hdr.appendChild(tog);
-  }
   const disp=isU&&planWishOnly?shows.filter(s=>isWish(s)):shows;
   const hcnt=document.createElement('span');hcnt.className='ph-cnt';hcnt.textContent=disp.length?disp.length+'개':'';
   hdr.appendChild(hcnt);cell.appendChild(hdr);
@@ -1132,6 +1130,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('gc').classList.toggle('hidden',tab!=='gantt');
     document.getElementById('lc').classList.toggle('hidden',tab!=='list');
     document.getElementById('rc').classList.toggle('hidden',tab!=='record');
+    document.getElementById('pc').classList.toggle('hidden',tab!=='plan');
     document.getElementById('ending-btn').style.display=tab==='settings'?'none':'';
     if(tab==='gantt')render();
     if(tab==='list')renderList();
@@ -1218,6 +1217,7 @@ document.getElementById('gst-f').addEventListener('change',render);
   });
   document.getElementById('gwish-f').addEventListener('click',()=>{document.getElementById('gwish-f').classList.toggle('on');render();});
   document.getElementById('lwish-f').addEventListener('click',()=>{document.getElementById('lwish-f').classList.toggle('on');renderList();});
+  document.getElementById('pwish-f').addEventListener('click',()=>{planWishOnly=!planWishOnly;renderPlan();});
 })();
 document.getElementById('gfav-f').addEventListener('click',()=>{document.getElementById('gfav-f').classList.toggle('on');render();});
 ['rl','sl','ul','ol'].forEach(id=>document.getElementById(id).addEventListener('change',renderList));
