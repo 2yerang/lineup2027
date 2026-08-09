@@ -60,8 +60,53 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 .zoom-opt.cur{color:var(--accent);font-weight:700;}
 
 /* Buttons */
-#today-btn{background:var(--bg3);border:1px solid var(--border);color:var(--today);padding:6px 11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
-#today-btn:active{opacity:.7;}
+#today-btn,#cal-today-btn{background:var(--bg3);border:1px solid var(--border);color:var(--today);padding:6px 11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+#today-btn:active,#cal-today-btn:active{opacity:.7;}
+/* 캘린더 탭 */
+#tab-cal{display:flex;flex-direction:column;}
+#cal-wrap{flex:1;overflow-y:auto;padding:12px 10px 80px;-webkit-overflow-scrolling:touch;}
+#cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px;}
+#cal-ym{font-size:16px;font-weight:700;color:var(--text1);cursor:pointer;padding:4px 10px;border-radius:8px;position:relative;}
+#cal-ym:hover{background:var(--border);}
+#cal-ym-picker{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.6);min-width:220px;}
+#cal-ym-picker.open{display:block;}
+.cal-picker-year{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-picker-yr-btn{background:none;border:none;color:var(--text1);font-size:16px;cursor:pointer;width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.cal-picker-yr-btn:hover{background:var(--border);}
+#cal-picker-yr{font-size:14px;font-weight:700;color:var(--text1);}
+.cal-picker-months{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+.cal-picker-m{background:none;border:1px solid transparent;color:var(--text2);padding:6px 0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;}
+.cal-picker-m:hover{background:var(--border);color:var(--text1);}
+.cal-picker-m.cur{background:var(--accent);color:#fff;border-color:var(--accent);}
+#cal-ym-wrap{position:relative;}
+.cal-nav-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text1);width:34px;height:34px;border-radius:8px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.cal-nav-btn:hover{background:var(--border);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dow{text-align:center;font-size:10px;color:var(--text2);padding:3px 0 5px;font-weight:600;}
+.cal-dow.sun{color:#f47080;}.cal-dow.sat{color:#6a9cf8;}
+.cal-cell{min-height:64px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 4px 3px;overflow:hidden;}
+.cal-cell.other-month{opacity:.25;pointer-events:none;}
+.cal-cell.today{border-color:var(--today);}
+.cal-cell.has-rec{background:rgba(139,124,248,.1);border-color:rgba(139,124,248,.35);cursor:pointer;}
+.cal-cell.has-rec:active{background:rgba(139,124,248,.22);}
+.cal-date{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:2px;line-height:1;}
+.cal-cell.today .cal-date{color:var(--today);}
+.cal-cell.has-rec .cal-date{color:var(--text2);}
+.cal-rec-item{font-size:9px;color:var(--text1);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px;display:flex;align-items:center;gap:2px;}
+.cal-rec-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.cal-more{font-size:9px;color:var(--text2);margin-top:1px;}
+#cal-detail{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:2px solid var(--border);padding:14px 16px 24px;z-index:30;max-height:55vh;overflow-y:auto;box-shadow:0 -8px 24px rgba(0,0,0,.5);}
+#cal-detail.open{display:block;}
+#cal-det-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+#cal-det-date{font-size:14px;font-weight:700;color:var(--text1);}
+#cal-det-cls{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:0 2px;line-height:1;}
+.cal-det-item{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.cal-det-item:last-child{border-bottom:none;}
+.cal-det-item:active{opacity:.7;}
+.cal-det-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cal-det-name{font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cal-det-meta{font-size:11px;color:var(--text3);white-space:nowrap;}
+.cal-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:160px;gap:6px;color:var(--text3);font-size:13px;}
 #ending-btn{background:var(--bg3);border:1px solid var(--border);color:#ffa030;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .act-btn{background:var(--bg3);border:1px solid var(--border);color:var(--accent);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .act-btn:hover{background:rgba(139,124,248,.08);}
@@ -287,6 +332,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <button class="tab-btn" data-tab="list">리스트</button>
       <button class="tab-btn" data-tab="plan">계획</button>
       <button class="tab-btn" data-tab="record">기록</button>
+      <button class="tab-btn" data-tab="cal">캘린더</button>
       <button class="tab-btn" data-tab="settings">설정</button>
     </div>
   </div>
@@ -326,7 +372,10 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <button id="zip-btn" class="act-btn">ZIP 다운로드</button>
     </div>
     <div id="pc" class="ctrl-grp hidden">
-      <button class="vw-btn" id="pwish-f" title="위시만 보기">♥위시</button>
+      <button class="vw-btn" id="pwish-f" title="위시만 보기">♥</button>
+    </div>
+    <div id="cc" class="ctrl-grp hidden">
+      <button id="cal-today-btn">오늘</button>
     </div>
     <button id="ending-btn">⏰ <span id="ecnt"></span></button>
     <span id="count-badge"></span>
@@ -397,6 +446,43 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <span>관람 기록이 없습니다</span>
       <span style="font-size:12px;color:var(--text3)">간트·리스트에서 공연 클릭 후 기록을 추가하세요</span>
     </div>
+  </div>
+</div>
+
+<!-- 캘린더 -->
+<div id="tab-cal" class="tab-content hidden">
+  <div id="cal-wrap">
+    <div id="cal-header">
+      <button class="cal-nav-btn" id="cal-prev">◀</button>
+      <div id="cal-ym-wrap">
+        <span id="cal-ym"></span>
+        <div id="cal-ym-picker">
+          <div class="cal-picker-year">
+            <button class="cal-picker-yr-btn" id="cal-yr-prev">◀</button>
+            <span id="cal-picker-yr"></span>
+            <button class="cal-picker-yr-btn" id="cal-yr-next">▶</button>
+          </div>
+          <div class="cal-picker-months" id="cal-picker-months"></div>
+        </div>
+      </div>
+      <button class="cal-nav-btn" id="cal-next">▶</button>
+    </div>
+    <div class="cal-grid" id="cal-grid">
+      <div class="cal-dow sun">일</div>
+      <div class="cal-dow">월</div>
+      <div class="cal-dow">화</div>
+      <div class="cal-dow">수</div>
+      <div class="cal-dow">목</div>
+      <div class="cal-dow">금</div>
+      <div class="cal-dow sat">토</div>
+    </div>
+  </div>
+  <div id="cal-detail">
+    <div id="cal-det-hdr">
+      <span id="cal-det-date"></span>
+      <button id="cal-det-cls">✕</button>
+    </div>
+    <div id="cal-det-list"></div>
   </div>
 </div>
 
@@ -502,7 +588,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v2.1.2';const APP_DATE='2026.07.11';
+const APP_VER='v3';const APP_DATE='2026.08.10';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -1118,6 +1204,139 @@ function updPlanSel(){
 })();
 
 // Tabs
+// ── 캘린더 탭 ──────────────────────────────────────────────────
+let calYear=today.getFullYear(),calMonth=today.getMonth();
+function buildDateMap(){
+  const allR=gr(),map={};
+  Object.entries(allR).forEach(([k,entries])=>{
+    const s=SM[k];if(!s)return;
+    entries.forEach(e=>{if(!map[e.date])map[e.date]=[];map[e.date].push({s,e});});
+  });
+  return map;
+}
+function renderCal(){
+  const dateMap=buildDateMap();
+  const ym=String(calYear)+'-'+String(calMonth+1).padStart(2,'0');
+  document.getElementById('cal-ym').textContent=calYear+'년 '+(calMonth+1)+'월';
+  const grid=document.getElementById('cal-grid');
+  while(grid.children.length>7)grid.removeChild(grid.lastChild);
+  const firstDow=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const prevDays=new Date(calYear,calMonth,0).getDate();
+  for(let i=firstDow-1;i>=0;i--){
+    const cell=document.createElement('div');cell.className='cal-cell other-month';
+    const dn=document.createElement('div');dn.className='cal-date';dn.textContent=prevDays-i;
+    cell.appendChild(dn);grid.appendChild(cell);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const iso=ym+'-'+String(d).padStart(2,'0');
+    const recs=dateMap[iso]||[];
+    const cell=document.createElement('div');
+    let cls='cal-cell';
+    if(iso===TI)cls+=' today';
+    if(recs.length)cls+=' has-rec';
+    cell.className=cls;
+    const dn=document.createElement('div');dn.className='cal-date';dn.textContent=d;
+    cell.appendChild(dn);
+    const maxShow=3;
+    recs.slice(0,maxShow).forEach(({s,e})=>{
+      const item=document.createElement('div');item.className='cal-rec-item';
+      const dot=document.createElement('span');dot.className='cal-rec-dot';dot.style.background=bc(s);
+      const nm=document.createElement('span');nm.textContent=(e.gift?'[나눔]':'')+nd(s.name);
+      item.appendChild(dot);item.appendChild(nm);cell.appendChild(item);
+    });
+    if(recs.length>maxShow){
+      const more=document.createElement('div');more.className='cal-more';
+      more.textContent='+'+(recs.length-maxShow)+'개 더';cell.appendChild(more);
+    }
+    if(recs.length)cell.addEventListener('click',()=>openCalDetail(iso,recs));
+    grid.appendChild(cell);
+  }
+  const filled=firstDow+daysInMonth;
+  const nextPad=(7-filled%7)%7;
+  for(let i=1;i<=nextPad;i++){
+    const cell=document.createElement('div');cell.className='cal-cell other-month';
+    const dn=document.createElement('div');dn.className='cal-date';dn.textContent=i;
+    cell.appendChild(dn);grid.appendChild(cell);
+  }
+  const isThisMonth=(calYear===today.getFullYear()&&calMonth===today.getMonth());
+  document.getElementById('cal-today-btn').style.display=isThisMonth?'none':'';
+  const monthDates=Object.keys(dateMap).filter(d=>d.startsWith(ym));
+  const totalViews=monthDates.reduce((t,d)=>t+dateMap[d].filter(r=>!r.e.gift).length,0);
+  const totalShows=new Set(monthDates.flatMap(d=>dateMap[d].filter(r=>!r.e.gift).map(r=>r.s.name))).size;
+  const giftViews=monthDates.reduce((t,d)=>t+dateMap[d].filter(r=>r.e.gift).length,0);
+  const parts=[];
+  if(totalViews)parts.push(totalViews+'회 관람');
+  if(totalShows)parts.push(totalShows+'개 공연');
+  if(giftViews)parts.push(giftViews+'회 나눔');
+  cbadge.textContent=parts.join(' · ');
+}
+function openCalDetail(iso,recs){
+  const[y,m,d]=iso.split('-');
+  document.getElementById('cal-det-date').textContent=y+'년 '+Number(m)+'월 '+Number(d)+'일';
+  const list=document.getElementById('cal-det-list');list.innerHTML='';
+  recs.forEach(({s,e})=>{
+    const item=document.createElement('div');item.className='cal-det-item';
+    const dot=document.createElement('div');dot.className='cal-det-dot';dot.style.background=bc(s);
+    const nm=document.createElement('div');nm.className='cal-det-name';nm.textContent=nd(s.name)+' · '+vd(s.facility,s.hall);
+    const meta=document.createElement('div');meta.className='cal-det-meta';
+    const parts=[];if(e.gift)parts.push('나눔');if(e.photo)parts.push('📷');
+    meta.textContent=parts.join(' ');
+    item.appendChild(dot);item.appendChild(nm);item.appendChild(meta);
+    item.addEventListener('click',()=>{document.getElementById('cal-detail').classList.remove('open');openModal(s);});
+    list.appendChild(item);
+  });
+  document.getElementById('cal-detail').classList.add('open');
+}
+document.getElementById('cal-prev').addEventListener('click',()=>{
+  calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCal();
+});
+document.getElementById('cal-next').addEventListener('click',()=>{
+  calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCal();
+});
+document.getElementById('cal-today-btn').addEventListener('click',()=>{
+  calYear=today.getFullYear();calMonth=today.getMonth();renderCal();
+});
+document.getElementById('cal-det-cls').addEventListener('click',()=>document.getElementById('cal-detail').classList.remove('open'));
+(()=>{
+  const wrap=document.getElementById('cal-wrap');
+  let tx=0,ty=0,swiping=false;
+  wrap.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;swiping=true;},{passive:true});
+  wrap.addEventListener('touchmove',e=>{
+    if(!swiping)return;
+    const dx=e.touches[0].clientX-tx,dy=e.touches[0].clientY-ty;
+    if(Math.abs(dy)>Math.abs(dx)+10)swiping=false;
+  },{passive:true});
+  wrap.addEventListener('touchend',e=>{
+    if(!swiping)return;
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50){
+      if(dx<0){calMonth++;if(calMonth>11){calMonth=0;calYear++;}}
+      else{calMonth--;if(calMonth<0){calMonth=11;calYear--;}}
+      renderCal();
+    }
+    swiping=false;
+  },{passive:true});
+})();
+let pickerYear=calYear;
+function renderPicker(){
+  document.getElementById('cal-picker-yr').textContent=pickerYear+'년';
+  const mc=document.getElementById('cal-picker-months');mc.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const btn=document.createElement('button');btn.className='cal-picker-m'+(pickerYear===calYear&&m-1===calMonth?' cur':'');
+    btn.textContent=m+'월';
+    btn.addEventListener('click',e=>{e.stopPropagation();calYear=pickerYear;calMonth=m-1;document.getElementById('cal-ym-picker').classList.remove('open');renderCal();});
+    mc.appendChild(btn);
+  }
+}
+document.getElementById('cal-ym').addEventListener('click',e=>{
+  e.stopPropagation();pickerYear=calYear;renderPicker();
+  document.getElementById('cal-ym-picker').classList.toggle('open');
+});
+document.getElementById('cal-yr-prev').addEventListener('click',e=>{e.stopPropagation();pickerYear--;renderPicker();});
+document.getElementById('cal-yr-next').addEventListener('click',e=>{e.stopPropagation();pickerYear++;renderPicker();});
+document.addEventListener('click',()=>document.getElementById('cal-ym-picker').classList.remove('open'));
+
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const tab=btn.dataset.tab;if(tab===curTab)return;curTab=tab;
@@ -1126,16 +1345,19 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('tab-list').classList.toggle('hidden',tab!=='list');
     document.getElementById('tab-plan').classList.toggle('hidden',tab!=='plan');
     document.getElementById('tab-record').classList.toggle('hidden',tab!=='record');
+    document.getElementById('tab-cal').classList.toggle('hidden',tab!=='cal');
     document.getElementById('tab-settings').classList.toggle('hidden',tab!=='settings');
     document.getElementById('gc').classList.toggle('hidden',tab!=='gantt');
     document.getElementById('lc').classList.toggle('hidden',tab!=='list');
     document.getElementById('rc').classList.toggle('hidden',tab!=='record');
     document.getElementById('pc').classList.toggle('hidden',tab!=='plan');
-    document.getElementById('ending-btn').style.display=tab==='settings'?'none':'';
+    document.getElementById('cc').classList.toggle('hidden',tab!=='cal');
+    document.getElementById('ending-btn').style.display=(tab==='settings'||tab==='cal')?'none':'';
     if(tab==='gantt')render();
     if(tab==='list')renderList();
     if(tab==='plan')renderPlan();
     if(tab==='record')renderRecord();
+    if(tab==='cal')renderCal();
     if(tab==='settings')renderSettings();
   });
 });
