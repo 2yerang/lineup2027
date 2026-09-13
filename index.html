@@ -320,7 +320,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 .plan-cell-hdr .ph-cnt{font-size:10px;color:var(--text3);font-weight:400;}
 .plan-cell.unassigned .plan-cell-hdr{color:#a898ff;}
 .plan-cell-body{flex:1;overflow-y:auto;padding:3px 5px;display:flex;flex-direction:column;gap:1px;}
-.plan-item{display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:4px;font-size:12px;font-weight:600;color:var(--text1);cursor:pointer;user-select:none;overflow:hidden;border:1px solid transparent;line-height:1.4;}
+.plan-item{display:flex;align-items:center;gap:4px;padding:3px 6px;border-radius:4px;font-size:12px;font-weight:600;color:var(--text1);cursor:pointer;user-select:none;overflow:hidden;border:1px solid transparent;line-height:1.4;flex-shrink:0;}
 .plan-item:hover{background:var(--bg3);border-color:var(--border);}
 .plan-item.dragging{opacity:.35;}
 .plan-item .pi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -330,6 +330,11 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 .pu-toggle{background:none;border:1px solid var(--border);color:var(--text3);padding:2px 6px;border-radius:5px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .pu-toggle.on{color:var(--accent);border-color:rgba(139,124,248,.4);}
 #mplan-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text1);padding:5px 8px;border-radius:8px;font-size:13px;-webkit-appearance:none;appearance:none;outline:none;margin-top:4px;}
+#pu-reg{width:80px;}#pu-st{width:76px;}
+.hide-btn{padding:0 10px;font-size:13px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;align-self:stretch;white-space:nowrap;}
+.hide-btn.on{background:rgba(255,128,64,.12);color:#ff8040;border-color:rgba(255,128,64,.5);}
+#mhide{background:none;border:1px solid var(--border);color:var(--text2);padding:4px 12px;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:6px;}
+#mhide.on{color:#ff8040;border-color:rgba(255,128,64,.5);background:rgba(255,128,64,.08);}
 </style>
 </head>
 <body>
@@ -352,6 +357,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <select id="gst-f"><option value="">전체 상태</option><option value="ongoing">공연중</option><option value="upcoming">예정</option><option value="ended">종료</option></select>
       <button class="vw-btn" id="gvw-f" data-vw="">○ ✓</button>
       <button class="vw-btn" id="gwish-f" title="위시리스트">♥</button>
+      <button class="hide-btn" id="ghide-f" title="숨김 공연 보기">🚫</button>
       <button id="gfav-f" title="즐겨찾기 극장만">★</button>
       <input type="search" id="sg" placeholder="공연명 · 극장" autocomplete="off" spellcheck="false">
       <div id="zoom-wrap">
@@ -369,6 +375,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <select id="sl"><option value="">전체 상태</option><option value="ongoing">공연중</option><option value="upcoming">예정</option><option value="ended">종료</option></select>
       <button class="vw-btn" id="lvw-f" data-vw="">○ ✓</button>
       <button class="vw-btn" id="lwish-f" title="위시리스트">♥</button>
+      <button class="hide-btn" id="lhide-f" title="숨김 공연 보기">🚫</button>
       <select id="ul"><option value="">전체</option><option value="new">신규</option><option value="modified">변경</option><option value="existing">기존</option></select>
       <select id="ol"><option value="status">상태순</option><option value="name">가나다순</option><option value="start-asc">개막일 빠른순</option><option value="start-desc">개막일 늦은순</option><option value="end-asc">폐막일 빠른순</option><option value="end-desc">폐막일 늦은순</option><option value="dur-asc">기간 짧은순</option><option value="dur-desc">기간 긴순</option></select>
       <input type="search" id="ql" placeholder="공연명 · 극장" autocomplete="off" spellcheck="false">
@@ -383,6 +390,10 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
     </div>
     <div id="pc" class="ctrl-grp hidden">
       <button class="vw-btn" id="pwish-f" title="위시만 보기">♥</button>
+      <select id="pu-reg"><option value="">전체 지역</option></select>
+      <select id="pu-st"><option value="">전체 상태</option><option value="ongoing">공연중</option><option value="upcoming">예정</option><option value="ended">종료</option></select>
+      <button class="vw-btn" id="puvw-f" data-vw="">○ ✓</button>
+      <button class="hide-btn" id="phide-f" title="숨김 공연 보기">🚫</button>
     </div>
     <div id="cc" class="ctrl-grp hidden">
       <button id="cal-today-btn">오늘</button>
@@ -557,6 +568,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
         <span class="mval">
           <button id="mstar">○ 미관람</button>
           <button id="mwish">♡ 위시리스트</button>
+          <button id="mhide">🚫 숨김</button>
           <div id="mrecdates"></div>
         </span>
       </div>
@@ -602,7 +614,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v3.1';const APP_DATE='2026.08.10';
+const APP_VER='v3.3';const APP_DATE='2026.09.14';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -711,6 +723,7 @@ function delRec(s,id){const r=gr(),k=sk(s);if(!r[k])return;const e=r[k].find(x=>
 // Populate regions
 const REGS=[...new Set(SHOWS.map(s=>s.region).filter(Boolean))].sort();
 ['rg','rl'].forEach(id=>{const sel=document.getElementById(id);REGS.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});sel.value='서울';});
+(()=>{const sel=document.getElementById('pu-reg');REGS.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;sel.appendChild(o);});})();
 
 // Zoom
 const gscroll=document.getElementById('gantt-scroll');
@@ -765,6 +778,13 @@ function saveWish(s){localStorage.setItem(WK,JSON.stringify([...s]));}
 function isWish(s){return getWish().has(sk(s));}
 function toggleWish(s){const w=getWish(),k=sk(s);if(w.has(k))w.delete(k);else w.add(k);saveWish(w);}
 
+// ===== HIDDEN =====
+const HK='lineup2027_hidden';
+function getHidden(){try{return new Set(JSON.parse(localStorage.getItem(HK)||'[]'))}catch{return new Set();}}
+function saveHidden(s){localStorage.setItem(HK,JSON.stringify([...s]));}
+function isHidden(s){return getHidden().has(sk(s));}
+function toggleHidden(s){const h=getHidden(),k=sk(s);if(h.has(k))h.delete(k);else h.add(k);saveHidden(h);}
+
 // ===== FAVORITES =====
 const FK='lineup2027_fav_venues';
 function getFavs(){try{return new Set(JSON.parse(localStorage.getItem(FK)||'[]'))}catch{return new Set();}}
@@ -813,7 +833,8 @@ function render(){
   const fGst=document.getElementById('gst-f').value;
   const fVw=document.getElementById('gvw-f').dataset.vw,fWish=document.getElementById('gwish-f').classList.contains('on');
   const fFav=document.getElementById('gfav-f').classList.contains('on');
-  const fl=SHOWS.filter(s=>{if(reg&&s.region!==reg)return false;if(q&&!(s.name+s.facility+s.hall).toLowerCase().includes(q))return false;if(fGst&&gst(s)!==fGst)return false;if(fVw==='viewed'&&!iv(s))return false;if(fVw==='unviewed'&&iv(s))return false;if(fWish&&!isWish(s))return false;return true;});
+  const fHide=document.getElementById('ghide-f').classList.contains('on');
+  const fl=SHOWS.filter(s=>{if(fHide?!isHidden(s):isHidden(s))return false;if(reg&&s.region!==reg)return false;if(q&&!(s.name+s.facility+s.hall).toLowerCase().includes(q))return false;if(fGst&&gst(s)!==fGst)return false;if(fVw==='viewed'&&!iv(s))return false;if(fVw==='unviewed'&&iv(s))return false;if(fWish&&!isWish(s))return false;return true;});
   const vm=new Map();fl.forEach(s=>{const k=s.facility+'\x00'+s.hall;if(!vm.has(k))vm.set(k,{d:vd(s.facility,s.hall),fac:s.facility,hall:s.hall,shows:[]});vm.get(k).shows.push(s);});
   const favs=getFavs();
   const viewedMap=gv();
@@ -859,7 +880,9 @@ function renderList(){
   const vw=document.getElementById('lvw-f').dataset.vw,wish=document.getElementById('lwish-f').classList.contains('on');
   const upd=document.getElementById('ul').value,sort=document.getElementById('ol').value;
   const q=document.getElementById('ql').value.trim().toLowerCase();
+  const fLHide=document.getElementById('lhide-f').classList.contains('on');
   let fl=SHOWS.filter(s=>{
+    if(fLHide?!isHidden(s):isHidden(s))return false;
     if(reg&&s.region!==reg)return false;if(st&&gst(s)!==st)return false;
     if(vw==='viewed'&&!iv(s))return false;if(vw==='unviewed'&&iv(s))return false;if(wish&&!isWish(s))return false;
     if(upd==='new'&&!_diff.nk.has(sk(s)))return false;
@@ -975,6 +998,8 @@ function updModal(s){
   star.className=viewed?'on':'';star.textContent=viewed?'✓ 관람':'○ 미관람';
   const wish=isWish(s);const mw=document.getElementById('mwish');
   mw.className=wish?'on':'';mw.textContent=wish?'♥ 위시리스트':'♡ 위시리스트';
+  const hidden=isHidden(s);const mh=document.getElementById('mhide');
+  mh.className=hidden?'on':'';mh.textContent=hidden?'🚫 숨김처리됨':'🚫 숨김';
   const recs=gsr(s),wrap=document.getElementById('mrecdates');wrap.innerHTML='';
   recs.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
     const p=document.createElement('span');p.className='mdrec'+(e.photo?' hp':'');
@@ -995,6 +1020,10 @@ function updModal(s){
 }
 // mstar: 관람기록 자동 반영, 수동 토글 없음
 document.getElementById('mwish').addEventListener('click',()=>{if(!curShow)return;toggleWish(curShow);updModal(curShow);if(curTab==='list')renderList();});
+document.getElementById('mhide').addEventListener('click',()=>{
+  if(!curShow)return;toggleHidden(curShow);updModal(curShow);
+  if(curTab==='gantt')render();else if(curTab==='list')renderList();else if(curTab==='plan')renderPlan();
+});
 document.getElementById('madd').addEventListener('click',()=>{if(!curShow)return;openAR(curShow);});
 document.getElementById('mcls').addEventListener('click',()=>ov.classList.remove('open'));
 ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});
@@ -1124,26 +1153,37 @@ function uPri(s){const w=isWish(s),f=isFav(s.facility,s.hall);return(w&&f)?0:w?1
 function renderPlan(){
   const plan=getPlan(),byM={};
   for(let i=0;i<=12;i++)byM[i]=[];byM['u']=[];
-  SHOWS.forEach(s=>{const mi=plan[sk(s)];if(mi!=null&&Number(mi)>=0&&Number(mi)<=12)byM[Number(mi)].push(s);else byM['u'].push(s);});
+  const fPHide=document.getElementById('phide-f').classList.contains('on');
+  SHOWS.forEach(s=>{if(fPHide?!isHidden(s):isHidden(s))return;const mi=plan[sk(s)];if(mi!=null&&Number(mi)>=0&&Number(mi)<=12)byM[Number(mi)].push(s);else byM['u'].push(s);});
   cbadge.textContent=(SHOWS.length-byM['u'].length)+'개 계획 / '+byM['u'].length+'개 미지정';
   document.getElementById('pwish-f').classList.toggle('on',planWishOnly);
   for(let i=0;i<=12;i++)byM[i].sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end)||a.name.localeCompare(b.name,'ko'));
   byM['u'].sort((a,b)=>uPri(a)-uPri(b)||a.end.localeCompare(b.end)||a.name.localeCompare(b.name,'ko'));
+  let uDisp=[...byM['u']];
+  const puReg=document.getElementById('pu-reg').value;
+  const puSt=document.getElementById('pu-st').value;
+  const puVw=document.getElementById('puvw-f').dataset.vw;
+  if(planWishOnly)uDisp=uDisp.filter(s=>isWish(s));
+  if(puReg)uDisp=uDisp.filter(s=>s.region===puReg);
+  if(puSt)uDisp=uDisp.filter(s=>gst(s)===puSt);
+  if(puVw==='viewed')uDisp=uDisp.filter(s=>iv(s));
+  else if(puVw==='unviewed')uDisp=uDisp.filter(s=>!iv(s));
   const grid=document.getElementById('plan-grid');grid.innerHTML='';
   for(let mi=0;mi<=12;mi++)grid.appendChild(makePlanCell(mi,byM[mi],false));
-  grid.appendChild(makePlanCell('u',byM['u'],true));
+  grid.appendChild(makePlanCell('u',uDisp,true,byM['u'].length));
 }
-function makePlanCell(mi,shows,isU){
+function makePlanCell(mi,shows,isU,totalU){
   const cell=document.createElement('div');
   cell.className='plan-cell'+(isU?' unassigned':'');cell.dataset.mi=String(mi);
   const hdr=document.createElement('div');hdr.className='plan-cell-hdr';
   const hn=document.createElement('span');hn.className='ph-name';hn.textContent=isU?'미지정':MONTH_NAMES[mi];
   hdr.appendChild(hn);
-  const disp=isU&&planWishOnly?shows.filter(s=>isWish(s)):shows;
-  const hcnt=document.createElement('span');hcnt.className='ph-cnt';hcnt.textContent=disp.length?disp.length+'개':'';
+  const hcnt=document.createElement('span');hcnt.className='ph-cnt';
+  if(isU&&totalU!=null&&shows.length!==totalU){hcnt.textContent=shows.length+'/'+totalU+'개';}
+  else{hcnt.textContent=shows.length?shows.length+'개':'';}
   hdr.appendChild(hcnt);cell.appendChild(hdr);
   const body=document.createElement('div');body.className='plan-cell-body';
-  disp.forEach(s=>body.appendChild(makePlanItem(s)));
+  shows.forEach(s=>body.appendChild(makePlanItem(s)));
   cell.appendChild(body);
   cell.addEventListener('dragover',e=>{e.preventDefault();cell.classList.add('drag-over');});
   cell.addEventListener('dragleave',e=>{if(!cell.contains(e.relatedTarget))cell.classList.remove('drag-over');});
@@ -1402,7 +1442,7 @@ document.getElementById('st-nick-save').addEventListener('click',()=>{
   alert(`닉네임이 '${v||'닉네임'}'(으)로 설정되었습니다.`);
 });
 document.getElementById('st-export').addEventListener('click',()=>{
-  const data={version:'1',exportedAt:TI,viewed:gv(),records:gr(),fav_venues:[...getFavs()],wishlist:[...getWish()]};
+  const data={version:'1',exportedAt:TI,viewed:gv(),records:gr(),fav_venues:[...getFavs()],wishlist:[...getWish()],hidden:[...getHidden()]};
   const json=JSON.stringify(data,null,2);
   const a=document.createElement('a');
   a.href='data:application/json;charset=utf-8,'+encodeURIComponent(json);
@@ -1420,7 +1460,7 @@ document.getElementById('st-import-file').addEventListener('change',function(){
       const recCnt=Object.values(recs).reduce((t,a)=>t+(a?a.length:0),0);
       const msg=`불러오기하면 현재 기기의 데이터가 덮어씌워집니다.\n\n관람 체크: ${Object.keys(data.viewed).length}개\n관람 기록: ${recCnt}회\n즐겨찾기: ${(data.fav_venues||[]).length}개\n\n계속하시겠습니까?`;
       if(!confirm(msg)){this.value='';return;}
-      sv(data.viewed);sr(recs);saveFavs(new Set(data.fav_venues||[]));saveWish(new Set(data.wishlist||[]));
+      sv(data.viewed);sr(recs);saveFavs(new Set(data.fav_venues||[]));saveWish(new Set(data.wishlist||[]));saveHidden(new Set(data.hidden||[]));
       alert('데이터를 성공적으로 불러왔습니다.');
       renderSettings();
     }catch{alert('올바른 형식의 파일이 아닙니다.');}
@@ -1430,7 +1470,7 @@ document.getElementById('st-import-file').addEventListener('change',function(){
 });
 document.getElementById('st-clear').addEventListener('click',()=>{
   if(!confirm('모든 관람 기록·사진·즐겨찾기가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.\n계속하시겠습니까?'))return;
-  localStorage.removeItem(VK);localStorage.removeItem(RK);localStorage.removeItem(FK);localStorage.removeItem(WK);localStorage.removeItem(PK);
+  localStorage.removeItem(VK);localStorage.removeItem(RK);localStorage.removeItem(FK);localStorage.removeItem(WK);localStorage.removeItem(PK);localStorage.removeItem(HK);
   alert('모든 개인 데이터가 삭제되었습니다.');
   updECnt();renderSettings();
 });
@@ -1446,12 +1486,12 @@ document.getElementById('gst-f').addEventListener('change',render);
 (function(){
   const VW_CYCLE={'':'viewed','viewed':'unviewed','unviewed':''};
   const VW_LABEL={'':'○ ✓','viewed':'✓','unviewed':'○'};
-  ['gvw-f','lvw-f','rvw-f'].forEach(id=>{
+  ['gvw-f','lvw-f','rvw-f','puvw-f'].forEach(id=>{
     document.getElementById(id).addEventListener('click',()=>{
       const btn=document.getElementById(id);
       const next=VW_CYCLE[btn.dataset.vw];
       btn.dataset.vw=next;btn.textContent=VW_LABEL[next];
-      if(id==='gvw-f')render();else if(id==='lvw-f')renderList();else renderRecord();
+      if(id==='gvw-f')render();else if(id==='lvw-f')renderList();else if(id==='rvw-f')renderRecord();else renderPlan();
     });
   });
   document.getElementById('gwish-f').addEventListener('click',()=>{document.getElementById('gwish-f').classList.toggle('on');render();});
@@ -1487,9 +1527,17 @@ document.getElementById('gst-f').addEventListener('change',render);
   });
 })();
 document.getElementById('gfav-f').addEventListener('click',()=>{document.getElementById('gfav-f').classList.toggle('on');render();});
+['ghide-f','lhide-f','phide-f'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',()=>{
+    document.getElementById(id).classList.toggle('on');
+    if(id==='ghide-f')render();else if(id==='lhide-f')renderList();else renderPlan();
+  });
+});
 ['rl','sl','ul','ol'].forEach(id=>document.getElementById(id).addEventListener('change',renderList));
 document.getElementById('ql').addEventListener('input',renderList);
 document.getElementById('qr').addEventListener('input',renderRecord);
+document.getElementById('pu-reg').addEventListener('change',renderPlan);
+document.getElementById('pu-st').addEventListener('change',renderPlan);
 
 // Init
 buildHdr();buildZoomMenu();render();updateZoom();updECnt();
