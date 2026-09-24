@@ -169,6 +169,8 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 .ebadge{display:inline-block;padding:2px 7px;border-radius:10px;flex-shrink:0;font-size:10px;font-weight:700;background:rgba(255,160,50,.18);color:#ffa030;}
 .gift-badge{display:inline-block;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(80,168,112,.18);color:#3a9960;margin-left:4px;flex-shrink:0;}
 .gift-cnt{font-size:11px;color:#3a9960;margin-left:3px;}
+.share-badge{display:inline-block;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(217,160,48,.18);color:#d9a030;margin-left:4px;flex-shrink:0;}
+.fam-badge{display:inline-block;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:700;background:rgba(80,140,220,.15);color:#4a90d9;margin-left:4px;flex-shrink:0;}
 #gfav-f{padding:0 10px;font-size:14px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;align-self:stretch;}
 #gfav-f.on{background:var(--accent);color:#fff;border-color:var(--accent);}
 .vw-btn{padding:0 10px;font-size:14px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;align-self:stretch;white-space:nowrap;}
@@ -587,7 +589,13 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
     <h3>관람 기록 추가</h3>
     <div id="armshow"></div>
     <div class="aff-row"><label class="afl" for="ardate">관람일</label><input type="date" id="ardate"></div>
-    <div class="aff-row"><label class="afl">나눔표</label><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text2)"><input type="checkbox" id="argift"> 다른 사람 대신 예매한 표</label></div>
+    <div class="aff-row"><label class="afl" for="artype">기록 유형</label><select id="artype" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:14px;-webkit-appearance:none;appearance:none;outline:none;">
+      <option value="self">직접 관람 (내가 예매)</option>
+      <option value="family_book">직접 관람 (가족 예매)</option>
+      <option value="friend_book">직접 관람 (지인 예매)</option>
+      <option value="gift">나눔 (내가 예매, 내가 안봄)</option>
+      <option value="family_watch">가족 관람 (내가 안봄)</option>
+    </select></div>
     <div class="aff">
       <label class="afl">티켓 사진 (선택)</label>
       <div class="pzone" id="pzone">📷 사진 선택 또는 촬영</div>
@@ -614,12 +622,14 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v3.3';const APP_DATE='2026.09.14';
+const APP_VER='v3.4';const APP_DATE='2026.09.24';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
 const ZOOM_LEVELS=[3.2,4.8,6.4,9.6,14.4];
 const SL={ongoing:'공연중',ended:'종료',upcoming:'예정'};
+const TYPE_BADGE={family_book:'<span class="share-badge">가족예매</span>',friend_book:'<span class="share-badge">지인예매</span>',gift:'<span class="gift-badge">나눔</span>',family_watch:'<span class="fam-badge">가족관람</span>'};
+const WATCH_TYPES=new Set(['self','family_book','friend_book']);
 const PAL=['#7c6cf4','#f4706c','#4cba80','#f4c83c','#4caaf4','#f46cd4','#78e070','#f49a60','#4cb0f4','#d468f4','#f0e060','#50d4c0','#f46890','#90d450','#6888f4','#f4b060','#50d490','#e060f4','#c8f460','#60ccf4'];
 
 let zIdx=0,dpx=ZOOM_LEVELS[0],curTab='gantt',curShow=null,arTarget=null,pendPhoto=null;
@@ -717,8 +727,9 @@ async function deletePhoto(id){
 }
 function photoExt(file){const m=file.type.match(/image\/(\w+)/);const t=m?m[1]:'jpg';return t==='jpeg'?'jpg':t;}
 
-function addRec(s,date,photo,gift){const r=gr(),k=sk(s);if(!r[k])r[k]=[];const id=(Date.now()).toString(36)+Math.random().toString(36).slice(2);r[k].push({id,date,photo:photo?{ext:photo.ext}:null,gift:!!gift});sr(r);if(!gift)setv(s,true);return id;}
-function delRec(s,id){const r=gr(),k=sk(s);if(!r[k])return;const e=r[k].find(x=>x.id===id);if(e&&e.photo)deletePhoto(id);r[k]=r[k].filter(e=>e.id!==id);const hasReal=r[k].some(e=>!e.gift);if(!hasReal)setv(s,false);if(!r[k].length)delete r[k];sr(r);}
+function addRec(s,date,photo,type){const r=gr(),k=sk(s);if(!r[k])r[k]=[];const id=(Date.now()).toString(36)+Math.random().toString(36).slice(2);r[k].push({id,date,photo:photo?{ext:photo.ext}:null,type:type||'self'});sr(r);if(WATCH_TYPES.has(type||'self'))setv(s,true);return id;}
+function delRec(s,id){const r=gr(),k=sk(s);if(!r[k])return;const e=r[k].find(x=>x.id===id);if(e&&e.photo)deletePhoto(id);r[k]=r[k].filter(e=>e.id!==id);const hasWatch=r[k].some(e=>WATCH_TYPES.has(e.type||'self'));if(!hasWatch)setv(s,false);if(!r[k].length)delete r[k];sr(r);}
+function migrateRecordTypes(){const r=gr();let changed=false;Object.values(r).forEach(entries=>{entries.forEach(e=>{if(e.type===undefined){e.type=e.gift===true?'family_book':'self';delete e.gift;changed=true;}});});if(changed)sr(r);}
 
 // Populate regions
 const REGS=[...new Set(SHOWS.map(s=>s.region).filter(Boolean))].sort();
@@ -739,6 +750,10 @@ function getRepDate(entries){
   const sorted=[...entries].sort((a,b)=>a.date.localeCompare(b.date));
   const pe=sorted.filter(e=>e.photo);
   if(pe.length===1)return pe[0].date;
+  for(const t of ['self','gift','family_book','family_watch','friend_book']){
+    const te=sorted.filter(e=>(e.type||'self')===t);
+    if(te.length)return te[0].date;
+  }
   return sorted[0]?.date||'';
 }
 function getPhotoCode(name,usedCodes){
@@ -933,9 +948,11 @@ function renderRecord(){
   keys.forEach(k=>{
     const s=SM[k];if(!s)return;
     const entries=(allR[k]||[]).sort((a,b)=>a.date.localeCompare(b.date));
-    const realEntries=entries.filter(e=>!e.gift);
-    const giftEntries=entries.filter(e=>e.gift);
-    const repDate=getRepDate(realEntries.length?realEntries:entries);
+    const selfEntries=entries.filter(e=>(e.type||'self')==='self');
+    const shareEntries=entries.filter(e=>e.type==='family_book'||e.type==='friend_book');
+    const giftEntries=entries.filter(e=>e.type==='gift');
+    const famEntries=entries.filter(e=>e.type==='family_watch');
+    const repDate=getRepDate(entries);
     // Main row
     const tr=document.createElement('tr');tr.className='rec-row';
     // 공연명
@@ -952,7 +969,11 @@ function renderRecord(){
     // 관람 (횟수만, 사진수 없음)
     const tdCnt=document.createElement('td');
     tdCnt.style.cssText='white-space:nowrap;text-align:center';
-    tdCnt.innerHTML=`${realEntries.length?`<span class="rcnt">${realEntries.length}회</span>`:''}${giftEntries.length?`<span class="gift-badge" style="margin-left:${realEntries.length?'4px':'0'}">나눔${giftEntries.length}</span>`:''}`;tr.appendChild(tdCnt);
+    const badges=[];
+    if(shareEntries.length)badges.push(`<span class="share-badge">선물${shareEntries.length}</span>`);
+    if(giftEntries.length)badges.push(`<span class="gift-badge">나눔${giftEntries.length}</span>`);
+    if(famEntries.length)badges.push(`<span class="fam-badge">가족${famEntries.length}</span>`);
+    tdCnt.innerHTML=`${selfEntries.length?`<span class="rcnt">${selfEntries.length}회</span>`:''}${badges.join('')}`;tr.appendChild(tdCnt);
     // 관람일 (대표 날짜)
     const tdDates=document.createElement('td');
     tdDates.innerHTML=`<span style="font-size:12px;color:var(--text2)">${fd(repDate)||'-'}</span>`;
@@ -970,7 +991,7 @@ function renderRecord(){
     const inner=document.createElement('div');inner.className='rec-entries-inner';
     entries.forEach(e=>{
       const row=document.createElement('div');row.className='rentry';
-      row.innerHTML=`<span class="edate">${fd(e.date)}${e.gift?'<span class="gift-badge">나눔</span>':''}${e.photo?' 📷':''}</span>`;
+      row.innerHTML=`<span class="edate">${fd(e.date)}${TYPE_BADGE[e.type]||''}${e.photo?' 📷':''}</span>`;
       if(e.photo){const pb=document.createElement('button');pb.className='ephoto';pb.title='사진 보기';pb.textContent='🖼';pb.addEventListener('click',()=>showPhoto(e.id));row.appendChild(pb);}
       const db=document.createElement('button');db.className='edel';db.title='삭제';db.textContent='✕';
       db.addEventListener('click',()=>{if(!confirm('이 관람 기록을 삭제하시겠습니까?'))return;delRec(s,e.id);updECnt();renderRecord();if(ov.classList.contains('open')&&curShow&&sk(curShow)===sk(s))updModal(s);});
@@ -1005,7 +1026,7 @@ function updModal(s){
   recs.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
     const p=document.createElement('span');p.className='mdrec'+(e.photo?' hp':'');
     const ct=document.createElement('span');
-    ct.innerHTML=(e.photo?'📷 ':'')+fd(e.date)+(e.gift?'<span class="gift-badge">나눔</span>':'');
+    ct.innerHTML=(e.photo?'📷 ':'')+fd(e.date)+(TYPE_BADGE[e.type]||'');
     if(e.photo)ct.addEventListener('click',()=>showPhoto(e.id));
     const del=document.createElement('button');del.className='mrec-del';del.textContent='×';
     del.addEventListener('click',ev=>{
@@ -1038,7 +1059,7 @@ function openAR(s){
   document.getElementById('arfile').value='';
   document.getElementById('pzone').textContent='📷 사진 선택 또는 촬영';
   document.getElementById('pzone').classList.remove('filled');
-  document.getElementById('argift').checked=false;
+  document.getElementById('artype').value='self';
   document.getElementById('aro').classList.add('open');
 }
 document.getElementById('pzone').addEventListener('click',()=>document.getElementById('arfile').click());
@@ -1052,8 +1073,8 @@ document.getElementById('arfile').addEventListener('change',function(){
 document.getElementById('arcancel').addEventListener('click',()=>document.getElementById('aro').classList.remove('open'));
 document.getElementById('arsave').addEventListener('click',async()=>{
   const date=document.getElementById('ardate').value;if(!date){alert('관람일을 입력해주세요.');return;}
-  const gift=document.getElementById('argift').checked;
-  const id=addRec(arTarget,date,pendPhoto,gift);
+  const type=document.getElementById('artype').value;
+  const id=addRec(arTarget,date,pendPhoto,type);
   if(pendPhoto)await savePhoto(id,pendPhoto.blob);
   document.getElementById('aro').classList.remove('open');
   if(ov.classList.contains('open')&&curShow&&sk(curShow)===sk(arTarget))updModal(arTarget);
@@ -1127,7 +1148,12 @@ document.getElementById('csv-btn').addEventListener('click',()=>{
     const hasPhoto=g.entries.some(e=>e.photo);
     let fname='';
     if(hasPhoto){pi++;const rp=g.entries.filter(e=>e.photo)[0];fname=`${getNick()}_${String(pi).padStart(3,'0')}_${g.code}.${rp?.photo?.ext||'jpg'}`;}
-    rows.push([i+1,g.s.name,g.repDate,fname,g.entries.length]);
+    const selfE=g.entries.filter(e=>(e.type||'self')==='self');
+    const watchE=g.entries.filter(e=>e.type==='family_book'||e.type==='friend_book');
+    const giftE=g.entries.filter(e=>e.type==='gift');
+    const famWE=g.entries.filter(e=>e.type==='family_watch');
+    const cnt=selfE.length>0?selfE.length+watchE.length:watchE.length>0?watchE.length:giftE.length+famWE.length;
+    rows.push([i+1,g.s.name,g.repDate,fname,cnt]);
   });
   const csv='﻿'+rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=`${getNick()}_관람기록.csv`;a.click();
@@ -1202,7 +1228,7 @@ function makePlanItem(s){
   if(isWish(s))item.dataset.wish='1';else if(isFav(s.facility,s.hall))item.dataset.fav='1';
   const nm=document.createElement('span');nm.className='pi-name';nm.textContent=nd(s.name);
   item.appendChild(nm);
-  const rcnt=gsr(s).filter(e=>!e.gift).length;
+  const rcnt=gsr(s).filter(e=>WATCH_TYPES.has(e.type||'self')).length;
   if(rcnt>0){const rb=document.createElement('span');rb.className='pi-rec';rb.textContent='✓'+rcnt;item.appendChild(rb);}
   item.title=nd(s.name)+' ('+fd(s.start)+'~'+fd(s.end)+')';
   item.addEventListener('click',()=>openModal(s));
@@ -1265,7 +1291,7 @@ function buildDateMap(){
   const allR=gr(),map={};
   Object.entries(allR).forEach(([k,entries])=>{
     const s=SM[k];if(!s)return;
-    entries.forEach(e=>{if(!map[e.date])map[e.date]=[];map[e.date].push({s,e});});
+    entries.forEach(e=>{if(!WATCH_TYPES.has(e.type||'self'))return;if(!map[e.date])map[e.date]=[];map[e.date].push({s,e});});
   });
   return map;
 }
@@ -1297,7 +1323,7 @@ function renderCal(){
     recs.slice(0,maxShow).forEach(({s,e})=>{
       const item=document.createElement('div');item.className='cal-rec-item';
       const dot=document.createElement('span');dot.className='cal-rec-dot';dot.style.background=bc(s);
-      const nm=document.createElement('span');nm.textContent=(e.gift?'[나눔]':'')+nd(s.name);
+      const nm=document.createElement('span');nm.textContent=nd(s.name);
       item.appendChild(dot);item.appendChild(nm);cell.appendChild(item);
     });
     if(recs.length>maxShow){
@@ -1317,13 +1343,11 @@ function renderCal(){
   const isThisMonth=(calYear===today.getFullYear()&&calMonth===today.getMonth());
   document.getElementById('cal-today-btn').style.display=isThisMonth?'none':'';
   const monthDates=Object.keys(dateMap).filter(d=>d.startsWith(ym));
-  const totalViews=monthDates.reduce((t,d)=>t+dateMap[d].filter(r=>!r.e.gift).length,0);
-  const totalShows=new Set(monthDates.flatMap(d=>dateMap[d].filter(r=>!r.e.gift).map(r=>r.s.name))).size;
-  const giftViews=monthDates.reduce((t,d)=>t+dateMap[d].filter(r=>r.e.gift).length,0);
+  const totalViews=monthDates.reduce((t,d)=>t+dateMap[d].length,0);
+  const totalShows=new Set(monthDates.flatMap(d=>dateMap[d].map(r=>r.s.name))).size;
   const parts=[];
   if(totalViews)parts.push(totalViews+'회 관람');
   if(totalShows)parts.push(totalShows+'개 공연');
-  if(giftViews)parts.push(giftViews+'회 나눔');
   cbadge.textContent=parts.join(' · ');
 }
 function openCalDetail(iso,recs){
@@ -1335,7 +1359,7 @@ function openCalDetail(iso,recs){
     const dot=document.createElement('div');dot.className='cal-det-dot';dot.style.background=bc(s);
     const nm=document.createElement('div');nm.className='cal-det-name';nm.textContent=nd(s.name)+' · '+vd(s.facility,s.hall);
     const meta=document.createElement('div');meta.className='cal-det-meta';
-    const parts=[];if(e.gift)parts.push('나눔');if(e.photo)parts.push('📷');
+    const parts=[];if(e.photo)parts.push('📷');
     meta.textContent=parts.join(' ');
     item.appendChild(dot);item.appendChild(nm);item.appendChild(meta);
     item.addEventListener('click',()=>{document.getElementById('cal-detail').classList.remove('open');openModal(s);});
@@ -1461,7 +1485,7 @@ document.getElementById('st-import-file').addEventListener('change',function(){
       const recCnt=Object.values(recs).reduce((t,a)=>t+(a?a.length:0),0);
       const msg=`불러오기하면 현재 기기의 데이터가 덮어씌워집니다.\n\n관람 체크: ${Object.keys(data.viewed).length}개\n관람 기록: ${recCnt}회\n즐겨찾기: ${(data.fav_venues||[]).length}개\n숨김: ${(data.hidden||[]).length}개\n\n계속하시겠습니까?`;
       if(!confirm(msg)){this.value='';return;}
-      sv(data.viewed);sr(recs);saveFavs(new Set(data.fav_venues||[]));saveWish(new Set(data.wishlist||[]));saveHidden(new Set(data.hidden||[]));
+      sv(data.viewed);sr(recs);saveFavs(new Set(data.fav_venues||[]));saveWish(new Set(data.wishlist||[]));saveHidden(new Set(data.hidden||[]));migrateRecordTypes();
       alert('데이터를 성공적으로 불러왔습니다.');
       renderSettings();
     }catch{alert('올바른 형식의 파일이 아닙니다.');}
@@ -1505,6 +1529,11 @@ document.getElementById('gst-f').addEventListener('change',render);
       return '<div class="info-row"><span class="info-key">○ ✓</span><span class="info-val">전체 → 관람 → 미관람 순 토글</span></div>'+
              '<div class="info-row"><span class="info-key">📷</span><span class="info-val">전체 → 등록 → 미등록 순 토글</span></div>'+
              '<hr class="info-sep">'+
+             '<div class="info-row"><span class="info-key"><span class="rcnt">N회</span></span><span class="info-val">직접 관람 (내가 예매)</span></div>'+
+             '<div class="info-row"><span class="info-key"><span class="share-badge" style="margin-left:0">선물</span></span><span class="info-val">직접 관람 (가족·지인 예매)</span></div>'+
+             '<div class="info-row"><span class="info-key"><span class="gift-badge" style="margin-left:0">나눔</span></span><span class="info-val">내가 예매, 내가 안봄</span></div>'+
+             '<div class="info-row"><span class="info-key"><span class="fam-badge" style="margin-left:0">가족</span></span><span class="info-val">가족 관람 (내가 안봄)</span></div>'+
+             '<hr class="info-sep">'+
              '<div class="info-row"><span class="info-key">정렬</span><span class="info-val">가장 빠른 관람일 기준 오름차순 (고정)</span></div>';
     }
     if(tab==='plan'){
@@ -1541,7 +1570,7 @@ document.getElementById('pu-reg').addEventListener('change',renderPlan);
 document.getElementById('pu-st').addEventListener('change',renderPlan);
 
 // Init
-buildHdr();buildZoomMenu();render();updateZoom();updECnt();
+migrateRecordTypes();buildHdr();buildZoomMenu();render();updateZoom();updECnt();
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 </script>
