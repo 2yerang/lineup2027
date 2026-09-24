@@ -238,6 +238,8 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 .mdrec.hp{color:var(--accent);border-color:rgba(139,124,248,.4);cursor:pointer;}
 .mrec-del{background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;opacity:0.4;padding:0 1px;margin-left:1px;line-height:1;border-radius:3px;flex-shrink:0;}
 .mrec-del:hover{opacity:1;color:#f46c6c;}
+.mrec-add{background:none;border:none;font-size:11px;color:var(--text3);cursor:pointer;opacity:0.5;padding:0 2px;margin-left:2px;line-height:1;border-radius:3px;flex-shrink:0;}
+.mrec-add:hover{opacity:1;color:var(--accent);}
 .cam-badge{font-size:11px;margin-left:3px;opacity:0.75;}
 .mbtns{display:flex;gap:8px;margin-top:16px;}
 #mcls{flex:1;padding:11px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:14px;cursor:pointer;}
@@ -600,6 +602,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <label class="afl">티켓 사진 (선택)</label>
       <div class="pzone" id="pzone">📷 사진 선택 또는 촬영</div>
       <input type="file" id="arfile" accept="image/*">
+      <input type="file" id="apfile" accept="image/*" style="display:none">
       <img id="arpreview" alt="미리보기">
     </div>
     <div class="arbtns"><button id="arcancel">취소</button><button id="arsave">저장</button></div>
@@ -622,7 +625,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v3.4';const APP_DATE='2026.09.24';
+const APP_VER='v3.5';const APP_DATE='2026.09.24';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -691,7 +694,7 @@ const _keepVenue=new Set(),_keepName=new Set(),_diff=(()=>{
 _diff._init();
 
 // Storage
-const VK='lineup2027_viewed',RK='lineup2027_records',NK='lineup2027_nick';
+const VK='lineup2027_viewed',RK='lineup2027_records',NK='lineup2027_nick',TK='lineup2027_restore_tab';
 function getNick(){return localStorage.getItem(NK)||'닉네임';}
 function setNick(v){const t=v.trim();if(t)localStorage.setItem(NK,t);else localStorage.removeItem(NK);}
 function gv(){try{return JSON.parse(localStorage.getItem(VK)||'{}')}catch{return{}}}
@@ -729,6 +732,8 @@ function photoExt(file){const m=file.type.match(/image\/(\w+)/);const t=m?m[1]:'
 
 function addRec(s,date,photo,type){const r=gr(),k=sk(s);if(!r[k])r[k]=[];const id=(Date.now()).toString(36)+Math.random().toString(36).slice(2);r[k].push({id,date,photo:photo?{ext:photo.ext}:null,type:type||'self'});sr(r);if(WATCH_TYPES.has(type||'self'))setv(s,true);return id;}
 function delRec(s,id){const r=gr(),k=sk(s);if(!r[k])return;const e=r[k].find(x=>x.id===id);if(e&&e.photo)deletePhoto(id);r[k]=r[k].filter(e=>e.id!==id);const hasWatch=r[k].some(e=>WATCH_TYPES.has(e.type||'self'));if(!hasWatch)setv(s,false);if(!r[k].length)delete r[k];sr(r);}
+let _apTarget=null;
+function attachPhoto(s,e){_apTarget={s,id:e.id};const f=document.getElementById('apfile');f.value='';f.click();}
 function migrateRecordTypes(){const r=gr();let changed=false;Object.values(r).forEach(entries=>{entries.forEach(e=>{if(e.type===undefined){e.type=e.gift===true?'family_book':'self';delete e.gift;changed=true;}});});if(changed)sr(r);}
 
 // Populate regions
@@ -926,6 +931,7 @@ function renderList(){
   });
 }
 
+const _recOpen=new Set(); // 기록탭 ▼ 펼친 공연 (재렌더 후 유지)
 function renderRecord(){
   const q=document.getElementById('qr').value.trim().toLowerCase();
   const allR=gr();
@@ -993,12 +999,14 @@ function renderRecord(){
       const row=document.createElement('div');row.className='rentry';
       row.innerHTML=`<span class="edate">${fd(e.date)}${TYPE_BADGE[e.type]||''}${e.photo?' 📷':''}</span>`;
       if(e.photo){const pb=document.createElement('button');pb.className='ephoto';pb.title='사진 보기';pb.textContent='🖼';pb.addEventListener('click',()=>showPhoto(e.id));row.appendChild(pb);}
+      else{const ab=document.createElement('button');ab.className='ephoto';ab.title='사진 추가';ab.textContent='📷+';ab.addEventListener('click',()=>attachPhoto(s,e));row.appendChild(ab);}
       const db=document.createElement('button');db.className='edel';db.title='삭제';db.textContent='✕';
       db.addEventListener('click',()=>{if(!confirm('이 관람 기록을 삭제하시겠습니까?'))return;delRec(s,e.id);updECnt();renderRecord();if(ov.classList.contains('open')&&curShow&&sk(curShow)===sk(s))updModal(s);});
       row.appendChild(db);inner.appendChild(row);
     });
     detailTd.appendChild(inner);detailTr.appendChild(detailTd);tbody.appendChild(detailTr);
-    expBtn.addEventListener('click',e=>{e.stopPropagation();const op=detailTr.classList.toggle('open');expBtn.textContent=op?'▲':'▼';});
+    if(_recOpen.has(k)){detailTr.classList.add('open');expBtn.textContent='▲';}
+    expBtn.addEventListener('click',e=>{e.stopPropagation();const op=detailTr.classList.toggle('open');expBtn.textContent=op?'▲':'▼';if(op)_recOpen.add(k);else _recOpen.delete(k);});
     tr.addEventListener('click',e=>{if(e.target.closest('.radd,.rexp,.dchip'))return;openModal(s);});
   });
 }
@@ -1036,7 +1044,9 @@ function updModal(s){
       if(curTab==='list')renderList();
       if(curTab==='record')renderRecord();
     });
-    p.appendChild(ct);p.appendChild(del);
+    p.appendChild(ct);
+    if(!e.photo){const ab=document.createElement('button');ab.className='mrec-add';ab.title='사진 추가';ab.textContent='📷+';ab.addEventListener('click',ev=>{ev.stopPropagation();attachPhoto(s,e);});p.appendChild(ab);}
+    p.appendChild(del);
     wrap.appendChild(p);
   });
 }
@@ -1084,6 +1094,18 @@ document.getElementById('arsave').addEventListener('click',async()=>{
   renderRecord();
 });
 document.getElementById('aro').addEventListener('click',e=>{if(e.target===document.getElementById('aro'))document.getElementById('aro').classList.remove('open');});
+// 기존 기록에 사진 추가
+document.getElementById('apfile').addEventListener('change',async function(){
+  const f=this.files[0];if(!f||!_apTarget)return;
+  const{s,id}=_apTarget;_apTarget=null;
+  const r=gr(),ent=(r[sk(s)]||[]).find(x=>x.id===id);if(!ent)return;
+  await savePhoto(id,f);
+  ent.photo={ext:photoExt(f)};sr(r);
+  this.value='';
+  if(curTab==='record')renderRecord();
+  if(curTab==='cal')renderCal();
+  if(ov.classList.contains('open')&&curShow&&sk(curShow)===sk(s))updModal(s);
+});
 
 
 // Ending modal
@@ -1459,6 +1481,7 @@ document.getElementById('st-update').addEventListener('click',async()=>{
     if('serviceWorker' in navigator){const reg=await navigator.serviceWorker.getRegistration();if(reg)await reg.update();}
   }catch(e){}
   msg.style.display='';msg.textContent='최신 버전을 불러오는 중입니다...';
+  try{sessionStorage.setItem(TK,curTab);}catch{}
   setTimeout(()=>location.reload(),400);
 });
 document.getElementById('st-nick-save').addEventListener('click',()=>{
@@ -1571,6 +1594,8 @@ document.getElementById('pu-st').addEventListener('change',renderPlan);
 
 // Init
 migrateRecordTypes();buildHdr();buildZoomMenu();render();updateZoom();updECnt();
+// 업데이트 확인 후 새로고침 시 이전 탭 복원
+try{const t=sessionStorage.getItem(TK);if(t){sessionStorage.removeItem(TK);const b=document.querySelector('.tab-btn[data-tab="'+t+'"]');if(b)b.click();}}catch{}
 
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 </script>
