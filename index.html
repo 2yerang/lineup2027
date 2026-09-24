@@ -264,6 +264,16 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 #arcancel{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:11px;border-radius:10px;font-size:14px;cursor:pointer;}
 #arsave{flex:2;background:var(--accent);border:none;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
 
+/* Type change modal */
+#tco{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:115;align-items:center;justify-content:center;}
+#tco.open{display:flex;}
+#tcm{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:24px;width:min(400px,92vw);}
+#tcm h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+#tcinfo{font-size:12px;color:var(--text2);margin-bottom:18px;}
+#tctype{flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:14px;-webkit-appearance:none;appearance:none;outline:none;}
+#tccancel{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:11px;border-radius:10px;font-size:14px;cursor:pointer;}
+#tcsave{flex:2;background:var(--accent);border:none;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+
 /* Ending modal */
 #eo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:105;align-items:flex-end;justify-content:center;}
 #eo.open{display:flex;}
@@ -609,6 +619,16 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
   </div>
 </div>
 
+<!-- 기록 유형 변경 모달 -->
+<div id="tco">
+  <div id="tcm">
+    <h3>기록 유형 변경</h3>
+    <div id="tcinfo"></div>
+    <div class="aff-row"><label class="afl" for="tctype">기록 유형</label><select id="tctype"></select></div>
+    <div class="arbtns"><button id="tccancel">취소</button><button id="tcsave">저장</button></div>
+  </div>
+</div>
+
 <!-- 종료 임박 모달 -->
 <div id="eo">
   <div id="em">
@@ -625,7 +645,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v3.5';const APP_DATE='2026.09.24';
+const APP_VER='v3.6';const APP_DATE='2026.09.24';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -1000,6 +1020,7 @@ function renderRecord(){
       row.innerHTML=`<span class="edate">${fd(e.date)}${TYPE_BADGE[e.type]||''}${e.photo?' 📷':''}</span>`;
       if(e.photo){const pb=document.createElement('button');pb.className='ephoto';pb.title='사진 보기';pb.textContent='🖼';pb.addEventListener('click',()=>showPhoto(e.id));row.appendChild(pb);}
       else{const ab=document.createElement('button');ab.className='ephoto';ab.title='사진 추가';ab.textContent='📷+';ab.addEventListener('click',()=>attachPhoto(s,e));row.appendChild(ab);}
+      const tb=document.createElement('button');tb.className='ephoto';tb.title='유형 변경';tb.textContent='✎';tb.addEventListener('click',()=>openTypeChange(s,e));row.appendChild(tb);
       const db=document.createElement('button');db.className='edel';db.title='삭제';db.textContent='✕';
       db.addEventListener('click',()=>{if(!confirm('이 관람 기록을 삭제하시겠습니까?'))return;delRec(s,e.id);updECnt();renderRecord();if(ov.classList.contains('open')&&curShow&&sk(curShow)===sk(s))updModal(s);});
       row.appendChild(db);inner.appendChild(row);
@@ -1046,6 +1067,7 @@ function updModal(s){
     });
     p.appendChild(ct);
     if(!e.photo){const ab=document.createElement('button');ab.className='mrec-add';ab.title='사진 추가';ab.textContent='📷+';ab.addEventListener('click',ev=>{ev.stopPropagation();attachPhoto(s,e);});p.appendChild(ab);}
+    const tb=document.createElement('button');tb.className='mrec-add';tb.title='유형 변경';tb.textContent='✎';tb.addEventListener('click',ev=>{ev.stopPropagation();openTypeChange(s,e);});p.appendChild(tb);
     p.appendChild(del);
     wrap.appendChild(p);
   });
@@ -1105,6 +1127,34 @@ document.getElementById('apfile').addEventListener('change',async function(){
   if(curTab==='record')renderRecord();
   if(curTab==='cal')renderCal();
   if(ov.classList.contains('open')&&curShow&&sk(curShow)===sk(s))updModal(s);
+});
+// 기록 유형 변경
+let _tcTarget=null;
+function openTypeChange(s,e){
+  _tcTarget={s,id:e.id};
+  const sel=document.getElementById('tctype');
+  if(!sel.options.length)sel.innerHTML=document.getElementById('artype').innerHTML;
+  sel.value=e.type||'self';
+  document.getElementById('tcinfo').textContent=nd(s.name)+' · '+fd(e.date);
+  document.getElementById('tco').classList.add('open');
+}
+document.getElementById('tccancel').addEventListener('click',()=>document.getElementById('tco').classList.remove('open'));
+document.getElementById('tco').addEventListener('click',e=>{if(e.target===document.getElementById('tco'))document.getElementById('tco').classList.remove('open');});
+document.getElementById('tcsave').addEventListener('click',()=>{
+  if(!_tcTarget)return;
+  const{s,id}=_tcTarget;_tcTarget=null;
+  const r=gr(),k=sk(s),ent=(r[k]||[]).find(x=>x.id===id);
+  document.getElementById('tco').classList.remove('open');
+  if(!ent)return;
+  ent.type=document.getElementById('tctype').value;sr(r);
+  setv(s,r[k].some(x=>WATCH_TYPES.has(x.type||'self')));
+  updECnt();
+  if(curTab==='gantt')render();
+  if(curTab==='list')renderList();
+  if(curTab==='plan')renderPlan();
+  if(curTab==='record')renderRecord();
+  if(curTab==='cal')renderCal();
+  if(ov.classList.contains('open')&&curShow&&sk(curShow)===k)updModal(s);
 });
 
 
