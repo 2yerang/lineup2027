@@ -645,7 +645,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v3.6';const APP_DATE='2026.09.24';
+const APP_VER='v3.6.1';const APP_DATE='2026.10.12';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -1254,7 +1254,8 @@ function renderPlan(){
   for(let i=0;i<=12;i++)byM[i]=[];byM['u']=[];
   const fPHide=document.getElementById('phide-f').classList.contains('on');
   SHOWS.forEach(s=>{if(fPHide?!isHidden(s):isHidden(s))return;const mi=plan[sk(s)];if(mi!=null&&Number(mi)>=0&&Number(mi)<=12)byM[Number(mi)].push(s);else byM['u'].push(s);});
-  cbadge.textContent=(SHOWS.length-byM['u'].length)+'개 계획 / '+byM['u'].length+'개 미지정';
+  let planned=0;for(let i=0;i<=12;i++)planned+=byM[i].length;
+  cbadge.textContent=planned+'개 계획 / '+byM['u'].length+'개 미지정';
   document.getElementById('pwish-f').classList.toggle('on',planWishOnly);
   for(let i=0;i<=12;i++)byM[i].sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end)||a.name.localeCompare(b.name,'ko'));
   byM['u'].sort((a,b)=>uPri(a)-uPri(b)||a.end.localeCompare(b.end)||a.name.localeCompare(b.name,'ko'));
