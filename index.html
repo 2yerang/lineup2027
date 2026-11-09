@@ -43,7 +43,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 #header input::placeholder{text-align:center;color:var(--text3);}
 #rg{width:82px;}#sg{width:144px;}
 #rl{width:80px;}#sl{width:78px;}#ul{width:88px;}#ol{width:106px;}#ql{width:136px;}
-#qr{width:136px;}
+#qr{width:136px;}#rcutoff-f{width:124px;}
 
 /* Zoom */
 #zoom-wrap{position:relative;flex-shrink:0;}
@@ -399,6 +399,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
       <button class="vw-btn" id="rvw-f" data-vw="">○ ✓</button>
       <button id="rphoto-f" data-photo="">📷</button>
       <input type="search" id="qr" placeholder="공연명 검색" autocomplete="off" spellcheck="false">
+      <input type="date" id="rcutoff-f" title="이 날짜 이후 관람만 집계 (기록탭 표시·CSV·ZIP 공통 적용)">
       <button id="csv-btn" class="act-btn">CSV 다운로드</button>
       <button id="zip-btn" class="act-btn">ZIP 다운로드</button>
     </div>
@@ -645,7 +646,7 @@ body{font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;backgro
 <script src="data/shows.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
 <script>
-const APP_VER='v3.6.2';const APP_DATE='2026.10.12';
+const APP_VER='v3.7';const APP_DATE='2026.11.09';
 const MONTH_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30,31]; // 26.12 + 27.01~12
 const MONTH_NAMES=['26.12월','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const TOTAL_DAYS=MONTH_DAYS.reduce((a,b)=>a+b,0);
@@ -801,11 +802,13 @@ function getPhotoCode(name,usedCodes){
   for(let i=2;i<=9;i++){const alt=base.slice(0,5)+i;if(!usedCodes.has(alt)){usedCodes.add(alt);return alt;}}
   return base;
 }
-function buildShowGroups(){
+function getCutoff(){return document.getElementById('rcutoff-f').value||null;}
+function buildShowGroups(cutoff){
   const recs=gr(),used=new Set(),groups=[];
   Object.entries(recs).forEach(([k,entries])=>{
     const s=SM[k];if(!s||!entries.length)return;
-    const sorted=[...entries].sort((a,b)=>a.date.localeCompare(b.date));
+    let sorted=[...entries].sort((a,b)=>a.date.localeCompare(b.date));
+    if(cutoff){sorted=sorted.filter(e=>e.date>=cutoff);if(!sorted.length)return;}
     groups.push({s,entries:sorted,repDate:getRepDate(sorted),code:getPhotoCode(s.name,used)});
   });
   return groups.sort((a,b)=>a.repDate.localeCompare(b.repDate));
@@ -957,7 +960,12 @@ function renderRecord(){
   const allR=gr();
   const tbody=document.getElementById('rec-tbody');tbody.innerHTML='';
   const empty=document.getElementById('rempty');
+  const cutoff=getCutoff();
   let keys=Object.keys(allR).filter(k=>allR[k]&&allR[k].length>0);
+  // 기준일 필터: 이후 기록만 남기고, 남는 기록이 없는 공연은 제외
+  const entMap={};
+  keys.forEach(k=>{entMap[k]=cutoff?allR[k].filter(e=>e.date>=cutoff):allR[k];});
+  if(cutoff)keys=keys.filter(k=>entMap[k].length>0);
   if(q)keys=keys.filter(k=>{const s=SM[k];return s&&s.name.toLowerCase().includes(q);});
   const fRStat=document.getElementById('rstat-f').value;
   const fRVw=document.getElementById('rvw-f').dataset.vw;
@@ -965,15 +973,15 @@ function renderRecord(){
   if(fRStat)keys=keys.filter(k=>{const s=SM[k];return s&&gst(s)===fRStat;});
   if(fRVw==='viewed')keys=keys.filter(k=>{const s=SM[k];return s&&iv(s);});
   else if(fRVw==='unviewed')keys=keys.filter(k=>{const s=SM[k];return s&&!iv(s);});
-  if(fRPhoto==='with')keys=keys.filter(k=>allR[k].some(e=>e.photo));
-  else if(fRPhoto==='without')keys=keys.filter(k=>!allR[k].some(e=>e.photo));
+  if(fRPhoto==='with')keys=keys.filter(k=>entMap[k].some(e=>e.photo));
+  else if(fRPhoto==='without')keys=keys.filter(k=>!entMap[k].some(e=>e.photo));
   empty.classList.toggle('show',keys.length===0);
-  if(curTab==='record')cbadge.textContent=keys.length+'개 공연 기록';
+  if(curTab==='record')cbadge.textContent=keys.length+'개 공연 기록'+(cutoff?` (${fd(cutoff)} 이후)`:'');
   // 오름차순: getRepDate 기준 빠른 날짜 먼저
-  keys.sort((a,b)=>{const ae=allR[a],be=allR[b];return getRepDate(ae).localeCompare(getRepDate(be));});
+  keys.sort((a,b)=>getRepDate(entMap[a]).localeCompare(getRepDate(entMap[b])));
   keys.forEach(k=>{
     const s=SM[k];if(!s)return;
-    const entries=(allR[k]||[]).sort((a,b)=>a.date.localeCompare(b.date));
+    const entries=[...entMap[k]].sort((a,b)=>a.date.localeCompare(b.date));
     const selfEntries=entries.filter(e=>(e.type||'self')==='self');
     const shareEntries=entries.filter(e=>e.type==='family_book'||e.type==='friend_book');
     const giftEntries=entries.filter(e=>e.type==='gift');
@@ -1209,8 +1217,9 @@ document.getElementById('rphoto-f').addEventListener('click',()=>{
   renderRecord();
 });
 document.getElementById('csv-btn').addEventListener('click',()=>{
-  const groups=buildShowGroups();
-  if(!groups.length){alert('저장된 관람 기록이 없습니다.');return;}
+  const cutoff=getCutoff();
+  const groups=buildShowGroups(cutoff);
+  if(!groups.length){alert(cutoff?`${fd(cutoff)} 이후 관람 기록이 없습니다.`:'저장된 관람 기록이 없습니다.');return;}
   const photoG=groups.filter(g=>g.entries.some(e=>e.photo));
   const noPhotoG=groups.filter(g=>!g.entries.some(e=>e.photo));
   const ordered=[...photoG,...noPhotoG];
@@ -1232,9 +1241,10 @@ document.getElementById('csv-btn').addEventListener('click',()=>{
 });
 document.getElementById('zip-btn').addEventListener('click',async()=>{
   if(typeof JSZip==='undefined'){alert('ZIP 라이브러리를 불러오지 못했습니다. 온라인 상태에서 다시 시도해주세요.');return;}
-  const groups=buildShowGroups();
+  const cutoff=getCutoff();
+  const groups=buildShowGroups(cutoff);
   const photoG=groups.filter(g=>g.entries.some(e=>e.photo));
-  if(!photoG.length){alert('저장된 사진이 없습니다.');return;}
+  if(!photoG.length){alert(cutoff?`${fd(cutoff)} 이후 저장된 사진이 없습니다.`:'저장된 사진이 없습니다.');return;}
   const zip=new JSZip();
   const entries=photoG.map((g,gi)=>{const fe=g.entries.filter(e=>e.photo)[0];return{id:fe.id,name:`${getNick()}_${String(gi+1).padStart(3,'0')}_${g.code}.${fe.photo.ext||'jpg'}`};});
   for(const pe of entries){const blob=await loadPhoto(pe.id);if(blob)zip.file(pe.name,blob);}
@@ -1608,6 +1618,7 @@ document.getElementById('gst-f').addEventListener('change',render);
              '<div class="info-row"><span class="info-key"><span class="gift-badge" style="margin-left:0">나눔</span></span><span class="info-val">내가 예매, 내가 안봄</span></div>'+
              '<div class="info-row"><span class="info-key"><span class="fam-badge" style="margin-left:0">가족</span></span><span class="info-val">가족 관람 (내가 안봄)</span></div>'+
              '<hr class="info-sep">'+
+             '<div class="info-row"><span class="info-key">기준일</span><span class="info-val">입력한 날짜 이후(당일 포함) 기록만 집계 · CSV·ZIP에도 적용</span></div>'+
              '<div class="info-row"><span class="info-key">정렬</span><span class="info-val">가장 빠른 관람일 기준 오름차순 (고정)</span></div>';
     }
     if(tab==='plan'){
@@ -1640,6 +1651,7 @@ document.getElementById('gfav-f').addEventListener('click',()=>{document.getElem
 ['rl','sl','ul','ol'].forEach(id=>document.getElementById(id).addEventListener('change',renderList));
 document.getElementById('ql').addEventListener('input',renderList);
 document.getElementById('qr').addEventListener('input',renderRecord);
+document.getElementById('rcutoff-f').addEventListener('change',renderRecord);
 document.getElementById('pu-reg').addEventListener('change',renderPlan);
 document.getElementById('pu-st').addEventListener('change',renderPlan);
 
